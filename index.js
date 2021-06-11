@@ -9,7 +9,7 @@ document.body.appendChild(app.view);
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
 const gameState = {
-  cheeseSpeed: 2,
+  cheeseSpeed: 3,
   mouseSpeed: 6,
   cheeses: [],
   clouds: [],
@@ -17,13 +17,19 @@ const gameState = {
   score: 0,
   cloudSpeed: 0.75,
   unicorn: null,
-  scoreText: new PIXI.Text("", new PIXI.TextStyle(
-    {fill: "#ffeced", stroke: "#92929c", strokeThickness:2}
-  )),
+  scoreText: new PIXI.Text(
+    "",
+    new PIXI.TextStyle({
+      fill: "#ffeced",
+      stroke: "#92929c",
+      strokeThickness: 2,
+    })
+  ),
   cheeseLastSpawned: 0,
   cloudLastSpawned: 0,
   mouseLastSpawned: 0,
   hearts: [],
+  groundTiles: [],
   level: 0,
 };
 
@@ -48,12 +54,12 @@ container.interactive = true;
 container.hitArea = new PIXI.Rectangle(0, 0, 640, 320);
 container.on("click", (e) => gameState.unicorn.jump());
 container.on("touchend", (e) => gameState.unicorn.jump());
-container.visible = false
+container.visible = false;
 
 const cheeseSheet = {};
 const cloudsSheet = {};
 const unicornSheet = {};
-const mouseSheet = {}
+const mouseSheet = {};
 let healthTexture;
 
 const baseHeight = app.screen.height - 86;
@@ -80,16 +86,16 @@ const createUnicorn = () => {
 };
 
 const createHealth = () => {
-  for(let i =0; i<3; i++){
-    const heart = new PIXI.Sprite(healthTexture)
-    heart.scale.set(2)
-    heart.anchor.set(1, 0)
-    heart.x = app.screen.width - (32 + 5) * (i) - 5
-    heart.y = 16
-    gameState.hearts.push(heart)
-    container.addChild(heart)
+  for (let i = 0; i < 3; i++) {
+    const heart = new PIXI.Sprite(healthTexture);
+    heart.scale.set(2);
+    heart.anchor.set(1, 0);
+    heart.x = app.screen.width - (32 + 5) * i - 5;
+    heart.y = 16;
+    gameState.hearts.push(heart);
+    container.addChild(heart);
   }
-}
+};
 
 const spawnMouse = () => {
   if (Math.random() < 0.6 && gameState.mouseLastSpawned > 100) {
@@ -102,11 +108,10 @@ const spawnMouse = () => {
     mouse.play();
     container.addChild(mouse);
     gameState.mice.push(mouse);
-    gameState.mouseLastSpawned = -1
+    gameState.mouseLastSpawned = -1;
   }
-  gameState.mouseLastSpawned++
-
-}
+  gameState.mouseLastSpawned++;
+};
 
 const spawnCheese = () => {
   if (Math.random() < 0.5 && gameState.cheeseLastSpawned > 50) {
@@ -120,9 +125,9 @@ const spawnCheese = () => {
     cheese.play();
     container.addChild(cheese);
     gameState.cheeses.push(cheese);
-    gameState.cheeseLastSpawned = -1
+    gameState.cheeseLastSpawned = -1;
   }
-  gameState.cheeseLastSpawned++
+  gameState.cheeseLastSpawned++;
 };
 
 const spawnClouds = () => {
@@ -138,9 +143,9 @@ const spawnClouds = () => {
     cloud.scale.set(2);
     container.addChild(cloud);
     gameState.clouds.push(cloud);
-    gameState.cloudLastSpawned = -1
+    gameState.cloudLastSpawned = -1;
   }
-  gameState.cloudLastSpawned++
+  gameState.cloudLastSpawned++;
 };
 
 const updateClouds = (delta) => {
@@ -160,20 +165,21 @@ const updateClouds = (delta) => {
   }
 };
 
-const intersects = (a, b, shrinkA=0, shrinkB=0) => {
+const intersects = (a, b, shrinkA = 0, shrinkB = 0) => {
   const aBox = a.getBounds();
   const bBox = b.getBounds();
   return (
     aBox.x + aBox.width - shrinkA > bBox.x + shrinkB &&
     aBox.x - shrinkA < bBox.x + bBox.width - shrinkB &&
     aBox.y + aBox.height > bBox.y + shrinkB &&
-    aBox.y < bBox.y + bBox.height +shrinkB
+    aBox.y < bBox.y + bBox.height + shrinkB
   );
 };
 
 const updateCheese = (delta) => {
   gameState.cheeses.map((cheese) => {
-    cheese.position.x -= (gameState.cheeseSpeed * (1 + 0.4 * gameState.level) * delta);
+    cheese.position.x -=
+      gameState.cheeseSpeed * (1 + 0.4 * gameState.level) * delta;
 
     if (cheese.position.x < 0) {
       cheese.dead = true;
@@ -181,7 +187,7 @@ const updateCheese = (delta) => {
       if (intersects(gameState.unicorn, cheese)) {
         cheese.dead = true;
         gameState.score += 1;
-        if (gameState.score % 10 === 0){
+        if (gameState.score % 10 === 0) {
           gameState.level++;
         }
       }
@@ -198,7 +204,8 @@ const updateCheese = (delta) => {
 
 const updateMouse = (delta) => {
   gameState.mice.map((mouse) => {
-    mouse.position.x -= gameState.mouseSpeed * (1 +  0.2 * gameState.level)* delta;
+    mouse.position.x -=
+      gameState.mouseSpeed * (1 + 0.2 * gameState.level) * delta;
 
     if (mouse.position.x < 0) {
       mouse.dead = true;
@@ -206,11 +213,11 @@ const updateMouse = (delta) => {
       if (intersects(gameState.unicorn, mouse, 10, 20)) {
         mouse.dead = true;
         gameState.unicorn.health -= 1;
-        container.removeChild(gameState.hearts[0])
-        gameState.hearts.splice(0, 1)
+        container.removeChild(gameState.hearts[0]);
+        gameState.hearts.splice(0, 1);
 
         if (gameState.unicorn.health === 0) {
-          endGame()
+          endGame();
         }
       }
     }
@@ -224,15 +231,30 @@ const updateMouse = (delta) => {
   }
 };
 
-const endGame = () => {
-  container.visible = false
-  if (gameState.score >= 40) {
-    winScreen.visible = true
-  } else {
-    failScreen.visible = true
+const updateGroundTiles = (delta) => {
+  gameState.groundTiles.map((tile) => {
+    tile.position.x -= 3 * (1 + 0.4 * gameState.level) * delta;
+  });
+  const firstTile = gameState.groundTiles[0];
+  if (gameState.groundTiles[0].position.x < -32) {
+    tile = gameState.groundTiles[0];
+    tile.position.x =
+      gameState.groundTiles[gameState.groundTiles.length - 1].position.x + 32;
+    gameState.groundTiles = [
+      ...gameState.groundTiles.slice(1, gameState.groundTiles.length),
+      tile,
+    ];
   }
-}
+};
 
+const endGame = () => {
+  container.visible = false;
+  if (gameState.score >= 40) {
+    winScreen.visible = true;
+  } else {
+    failScreen.visible = true;
+  }
+};
 
 const updateScoreText = () => {
   gameState.scoreText.text = `score: ${gameState.score}`;
@@ -260,59 +282,61 @@ const mainLoop = (delta, frame) => {
   updateClouds(delta);
   updateUnicorn(delta);
   updateMouse(delta);
+  updateGroundTiles(delta);
 };
 
 app.stage.addChild(container);
-app.stage.addChild(winScreen)
-app.stage.addChild(failScreen)
+app.stage.addChild(winScreen);
+app.stage.addChild(failScreen);
 
 app.stop();
 
 app.loader.add("cheeseSpritesheet", "assets/cheese.json");
 app.loader.add("unicorn", "assets/unicorn.json");
 app.loader.add("clouds", "assets/clouds.json");
-app.loader.add("mouse", "assets/mouse.json")
-app.loader.add("health", "assets/health.png")
+app.loader.add("mouse", "assets/mouse.json");
+app.loader.add("health", "assets/health.png");
 
 app.loader.load((loader, resources) => {
   loadSheet("cheeseSpritesheet", cheeseSheet, resources);
   loadSheet("clouds", cloudsSheet, resources);
   loadSheet("unicorn", unicornSheet, resources);
-  loadSheet("mouse", mouseSheet, resources)
+  loadSheet("mouse", mouseSheet, resources);
   gameState.scoreText.x = 16;
   gameState.scoreText.y = 16;
   container.addChild(gameState.scoreText);
 
   const groundTexture = new PIXI.Texture.from("assets/ground.png");
-  const winScreenTexture = new PIXI.Texture.from("assets/win.png")
-  const failScreenTexture = new PIXI.Texture.from("assets/game_over.png")
-  healthTexture = new PIXI.Texture.from("assets/health.png")
+  const winScreenTexture = new PIXI.Texture.from("assets/win.png");
+  const failScreenTexture = new PIXI.Texture.from("assets/game_over.png");
+  healthTexture = new PIXI.Texture.from("assets/health.png");
 
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 21; i++) {
     const groundTile = new PIXI.Sprite(groundTexture);
     groundTile.anchor.set(0, 1);
     groundTile.x = i * 32;
     groundTile.y = app.screen.height;
     groundTile.scale.set(2);
+    gameState.groundTiles.push(groundTile);
     container.addChild(groundTile);
   }
-  const failSprite = new PIXI.Sprite(failScreenTexture)
-  failSprite.anchor.set(0.5, 0.5)
-  failSprite.x = app.view.width / 2
-  failSprite.y = app.view.height / 2
-  failScreen.addChild(failSprite)
-  
-  const winSprite = new PIXI.Sprite(winScreenTexture)
-  winSprite.anchor.set(0.5, 0.5)
-  winSprite.x = app.view.width / 2
-  winSprite.y = app.view.height / 2
-  winScreen.addChild(winSprite)
+  const failSprite = new PIXI.Sprite(failScreenTexture);
+  failSprite.anchor.set(0.5, 0.5);
+  failSprite.x = app.view.width / 2;
+  failSprite.y = app.view.height / 2;
+  failScreen.addChild(failSprite);
+
+  const winSprite = new PIXI.Sprite(winScreenTexture);
+  winSprite.anchor.set(0.5, 0.5);
+  winSprite.x = app.view.width / 2;
+  winSprite.y = app.view.height / 2;
+  winScreen.addChild(winSprite);
 
   createUnicorn();
   createHealth();
-  container.visible = true
-  winScreen.visible = false
-  failScreen.visible = false
+  container.visible = true;
+  winScreen.visible = false;
+  failScreen.visible = false;
 
   app.ticker.add(mainLoop);
   app.start();
