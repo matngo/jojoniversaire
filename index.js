@@ -81,6 +81,7 @@ const createUnicorn = () => {
     if (!unicorn.jumping) {
       unicorn.vy = -10;
       unicorn.jumping = true;
+      unicorn.stop();
     }
   };
 };
@@ -267,6 +268,7 @@ const updateUnicorn = (delta) => {
 
   if (unicorn.y === baseHeight) {
     unicorn.jumping = false;
+    unicorn.play();
   }
   if (unicorn.jumping) {
     unicorn.vy = Math.max(unicorn.vy + unicorn.gy, -10 * delta);
